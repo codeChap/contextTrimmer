@@ -36,6 +36,13 @@ class ContextTrimmer {
      * @var bool
      */
     protected $removeExtraneous = false;
+
+    /**
+     * Whether to remove duplicate lines.
+     *
+     * @var bool
+     */
+    protected $removeDuplicateLines = false;
     
     /**
      * The maximum number of tokens per segment.
@@ -87,11 +94,15 @@ class ContextTrimmer {
         }
     
         // Retrieve configuration using the public get() method.
+        $removeDuplicateLines = $this->get('removeDuplicateLines');
         $removeShortWords = $this->get('removeShortWords');
         $minWordLength = $this->get('minWordLength');
         $removeExtraneous = $this->get('removeExtraneous');
-    
-        // Preprocess the text: optionally remove short words and compress whitespace.
+
+        // Preprocess the text: optionally remove duplicate lines, short words, and compress whitespace.
+        if ($removeDuplicateLines) {
+            $input = $this->removeDuplicateLines($input);
+        }
         if ($removeShortWords) {
             $input = $this->removeShortWords($input, $minWordLength);
         }
@@ -210,6 +221,18 @@ class ContextTrimmer {
      */
     public function compressWhitespace(string $text): string {
         return preg_replace('/\s+/u', ' ', $text) ?? $text;
+    }
+
+    /**
+     * Removes duplicate lines from the text, preserving order.
+     *
+     * @param string $text The original text.
+     *
+     * @return string The text with duplicate lines removed.
+     */
+    public function removeDuplicateLines(string $text): string {
+        $lines = explode("\n", $text);
+        return implode("\n", array_unique($lines));
     }
 
     /**

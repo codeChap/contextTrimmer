@@ -145,4 +145,31 @@ class ContextTrimmerTest extends TestCase
         $processedInput = $this->trimmer->compressWhitespace($input);
         $this->assertEquals($processedInput, $result[0]);
     }
-} 
+
+    public function testRemoveDuplicateLines(): void
+    {
+        $input = "Line one\nLine two\nLine one\nLine three\nLine two";
+
+        $result = $this->trimmer->removeDuplicateLines($input);
+
+        $this->assertEquals("Line one\nLine two\nLine three", $result);
+    }
+
+    public function testRemoveDuplicateLinesIntegration(): void
+    {
+        $input = "First sentence here.\nSecond sentence here.\nFirst sentence here.\nThird sentence here.";
+        $maxTokens = 50;
+
+        $result = $this->trimmer
+            ->set('removeDuplicateLines', true)
+            ->set('maxTokens', $maxTokens)
+            ->trim($input);
+
+        $joined = implode(' ', $result);
+        $this->assertStringContainsString('First', $joined);
+        $this->assertStringContainsString('Third', $joined);
+
+        // The duplicate "First sentence here." should only appear once
+        $this->assertEquals(1, substr_count($joined, 'First sentence here'));
+    }
+}
